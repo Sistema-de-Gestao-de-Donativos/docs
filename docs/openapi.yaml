@@ -110,7 +110,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CD'
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/CD'
+                  - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '404':
@@ -130,25 +133,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: Nome do CD.
-                address:
-                  type: string
-                  description: Endereço do CD.
-                phone:
-                  type: string
-                  description: Telefone para contato.
-                email:
-                  type: string
-                  description: Email para contato.
-              required:
-                - name
-                - address
-                - phone
-                - email
+              $ref: '#/components/schemas/CD'
       security:
         - BearerAuth: []
       responses:
@@ -157,7 +142,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CD'
+                allOf:
+                  - $ref: '#/components/schemas/CD'
+                  - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '400':
@@ -193,7 +180,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Abrigo'
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/Abrigo'
+                  - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '404':
@@ -213,25 +203,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: Nome do abrigo.
-                address:
-                  type: string
-                  description: Endereço do abrigo.
-                phone:
-                  type: string
-                  description: Telefone para contato.
-                email:
-                  type: string
-                  description: Email para contato.
-              required:
-                - name
-                - address
-                - phone
-                - email
+              $ref: '#/components/schemas/Abrigo'
       security:
         - BearerAuth: []
       responses:
@@ -240,7 +212,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Abrigo'
+                allOf:
+                  - $ref: '#/components/schemas/Abrigo'
+                  - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '400':
@@ -268,7 +242,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '400':
@@ -277,28 +253,48 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  /users/{email}:
     get:
-      operationId: get-usuario-by-email
+      summary: Recuperar informações sobre um usuário do sistema.
+      operationId: get-usuario
       tags:
         - MS de Usuários
-      summary: Recuperar informações de um usuário do sistema.
-      security:
-        - BearerAuth: []
       parameters:
+        - name: codUsuario
+          in: query
+          required: false
+          description: O código do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
         - name: email
-          in: path
-          required: true
-          description: Email do usuário a ser buscado.
+          in: query
+          required: false
+          description: Email do usuário a ser buscado. Se não especificado, não afetará a busca.
           schema:
             type: string
+        - name: phone
+          in: query
+          required: false
+          description: Telefone do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: cpf
+          in: query
+          required: false
+          description: Cadastro de Pessoa Física do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: Sucesso ao recuperar usuário.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '404':
@@ -310,22 +306,118 @@ paths:
         '500':
           $ref: '#/components/responses/HTTP500Error'
     delete:
-      operationId: delete-usuario-by-email
+      summary: Remover um usuário do sistema.
+      operationId: delete-usuario
       tags:
         - MS de Usuários
-      summary: Deletar um usuário do sistema.
-      security:
-        - BearerAuth: []
       parameters:
+        - name: codUsuario
+          in: query
+          required: false
+          description: O código do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
         - name: email
-          in: path
-          required: true
-          description: Email do usuário a ser deletado.
+          in: query
+          required: false
+          description: Email do usuário a ser buscado. Se não especificado, não afetará a busca.
           schema:
             type: string
+        - name: phone
+          in: query
+          required: false
+          description: Telefone do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: cpf
+          in: query
+          required: false
+          description: Cadastro de Pessoa Física do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
       responses:
         '204':
           description: Sucesso ao deletar usuário.
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /users/{role}/{codEntidade}:
+    get:
+      summary: Recuperar usuários de um certo papel de uma entidade (Abrigo ou CD).
+      operationId: get-usuario-papel-entidade
+      tags:
+        - MS de Usuários
+      parameters:
+        - name: role
+          in: path
+          required: true
+          description: O papel do usuário a ser buscado.
+          schema:
+            $ref: '#/components/schemas/Role'
+        - name: codEntidade
+          in: path
+          required: true
+          description: O identificador único da entidade (Abrigo ou CD) ao qual o usuário pertence.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar usuários.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/User'
+                    - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /users/{birthdate}:
+    get:
+      summary: Recuperar usuários pela data de nascimento.
+      operationId: get-usuario-birthdate
+      tags:
+        - MS de Usuários
+      parameters:
+        - name: birthdate
+          in: path
+          required: true
+          description: A data de nascimento do usuário, encodada no formato ISO 8601.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar usuários.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/User'
+                    - $ref: '#/components/schemas/Id'
         '401':
           $ref: '#/components/responses/HTTP401Error'
         '404':
@@ -349,9 +441,6 @@ components:
     CD:
       type: object
       properties:
-        code:
-          type: integer
-          description: Código do CD.
         name:
           type: string
           description: Nome do CD.
@@ -364,12 +453,15 @@ components:
         email:
           type: string
           description: Email de contato.
+      required:
+        - name
+        - address
+        - phone
+        - email
+        - joinedAt
     Abrigo:
-      type: integer
+      type: object
       properties:
-        code:
-          type: string
-          description: Código do abrigo.
         name:
           type: string
           description: Nome do abrigo.
@@ -382,6 +474,11 @@ components:
         email:
           type: string
           description: Email de contato.
+      required:
+        - name
+        - address
+        - phone
+        - email
     User:
       type: object
       properties:
@@ -398,11 +495,17 @@ components:
           type: string
           description: Telefone do usuário.
         role:
-          type: string
-          enum: [voluntario, adminCd, adminAbrigo, superadmin]
+          $ref: '#/components/schemas/Role'
         codEntidade:
           type: integer
           description: Código da entidade (CD ou Abrigo) à qual este usuário está relacionado.
+        cpf:
+          type: string
+          description: Cadastro de Pessoa Física do usuário.
+        birthdate:
+          type: string
+          format: date
+          description: Data de nascimento do usuário.
       required:
         - name
         - address
@@ -410,6 +513,17 @@ components:
         - phone
         - role
         - codEntidade
+        - cpf
+        - birthdate
+    Id:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Identificador único gerado automaticamente para o objeto.
+    Role:
+      type: string
+      enum: [voluntario, adminCd, adminAbrigo, superadmin]
   responses:
     HTTP500Error:
       description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
