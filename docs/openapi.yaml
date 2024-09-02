@@ -658,6 +658,7 @@ components:
         message:
           type: string
           description: Informações sobre o erro.
+          example: Mensagem com informações sobre o erro e/ou instruções de como prosseguir.
       required:
         - message
     CD:
@@ -666,14 +667,17 @@ components:
         name:
           type: string
           description: Nome do CD.
+          example: Centro de Distribuição do Sul
         address:
           $ref: '#/components/schemas/Address'
         phone:
           type: string
           description: Telefone de contato.
+          example: 555134027814
         email:
           type: string
           description: Email de contato.
+          example: cddosul@example.com.br
       required:
         - name
         - address
@@ -686,14 +690,17 @@ components:
         name:
           type: string
           description: Nome do abrigo.
+          example: Abrigo do Norte
         address:
           $ref: '#/components/schemas/Address'
         phone:
           type: string
           description: Telefone de contato.
+          example: 555134027814
         email:
           type: string
           description: Email de contato.
+          example: abrigodonorte@example.com.br
       required:
         - name
         - address
@@ -705,22 +712,27 @@ components:
         name:
           type: string
           description: Nome do usuário.
+          example: Geraldo de Fátima
         address:
           $ref: '#/components/schemas/Address'
         email:
           type: string
           description: Email do usuário.
+          example: geraldo@example.com.br
         phone:
           type: string
           description: Telefone do usuário.
+          example: 555134027814
         role:
           $ref: '#/components/schemas/Role'
         codEntidade:
           type: integer
           description: Código da entidade (CD ou Abrigo) a qual este usuário está relacionado.
+          example: 12
         cpf:
           type: string
           description: Cadastro de Pessoa Física do usuário.
+          example: 09023214567
       required:
         - name
         - address
@@ -735,6 +747,7 @@ components:
         code:
           type: string
           description: Identificador único gerado automaticamente para o objeto.
+          example: 1
       required:
         - code
     Role:
@@ -746,21 +759,27 @@ components:
         country:
           type: string
           description: País do endereço.
+          example: Brasil
         state:
           type: string
           description: Nome do estado do endereço por extenso.
+          example: Rio Grande do Sul
         city:
           type: string
           description: Cidade do endereço.
+          example: Porto Alegre
         neighborhood:
           type: string
           description: Bairro do endereço.
+          example: Partenon
         street:
           type: string
           description: Logradouro do endereço.
+          example: Av. Ipiranga
         number:
           type: integer
           description: Número do endereço.
+          example: 6681
       required:
         - country
         - state
@@ -774,17 +793,21 @@ components:
         name:
           type: string
           description: Nome completo do doador (para pessoas físicas) ou nome fantasia (para pessoas jurídicas).
+          example: Felipe da Costa
         address:
           $ref: '#/components/schemas/Address'
         email:
           type: string
           description: Email do doador.
+          example: felipe@example.com.br
         phone:
           type: string
           description: Telefone do doador.
+          example: 555134027814
         codCadastro:
           type: string
           description: CPF (para pessoas físicas) ou CNPJ (para pessoas jurídicas).
+          example: 88432367180
       required:
         - name
         - address
@@ -797,17 +820,21 @@ components:
         nomeItem:
           type: string
           description: Nome do item.
+          example: Arroz branco
         unidadeDeMedida:
           type: string
           description: Unidade de medida do item.
+          example: kg
         multiplicador:
           type: string
           description: Qual o tamanho do item relativo à unidade de medida informada.
+          example: 1
         tags:
           type: array
           items:
               type: string
           description: Tags associadas ao item, como "higiene", "alimentação" etc.
+          example: ['alimentos', 'nao pereciveis']
       required:
         - nomeItem
         - unidadeDeMedida
@@ -818,15 +845,19 @@ components:
         codDoador:
           type: string
           description: CPF/CNPJ do doador dos itens.
+          example: 10
         codCd:
           type: integer
           description: Código do CD que está recebendo os itens.
+          example: 2
         qtdDoada:
           type: integer
           description: Quantidade do item que foi doada.
+          example: 5
         qtdAtual:
           type: integer
           description: Quanto do que foi doado ainda está disponível no estoque.
+          example: 3
         dataDoacao:
           type: string
           format: date
@@ -852,6 +883,7 @@ components:
               message:
                 type: string
                 description: Alguma informação sobre o erro ou instrução de como proceder.
+                example: Internal Server Error. Try again later.
     HTTP400Error:
       description: Algo de errado no formato da requisição.
       content:
