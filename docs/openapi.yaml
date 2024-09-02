@@ -18,12 +18,12 @@ tags:
     description: Armazenamento e gerência das informações sobre os centros de distribuição (CDs) cadastrados no sistema.
   - name: MS de Doadores
     description: Armazenamento e gerência das informações sobre os doadores cadastrados no sistema.
-  - name: MS de Relatórios
-    description: Geração de relatórios para administradores.
+  - name: MS de Estoque
+    description: Gestão dos estoques dos centros de distrbuição (CDs).
   - name: MS de Pedidos
     description: Armazenamento e gerência dos pedidos feitos dos abrigos aos centros de distribuição (CDs)
-  - name: MS de Estoque
-    description: Gestão dos estoques dos centros de distrbuição (CDs) do
+  - name: MS de Relatórios
+    description: Geração de relatórios para administradores.
 paths:
   /v1/auth/google:
     get:
@@ -476,6 +476,180 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
+  /v1/stock/{codCd}:
+    get:
+      summary: Recuperar o estoque atual de um CD.
+      operationId: get-estoque-atual-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo estoque deseja-se recuperar.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar estoque.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        item:
+                          $ref: '#/components/schemas/StockItem'
+                    - $ref: '#/components/schemas/StockItemMeta'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      summary: Dar a entrada de itens no estoque de um CD.
+      operationId: entrada-estoque-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo estoque deseja-se atualizar.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    codBarras:
+                      type: string
+                      description: Código de barras do item.
+                  required:
+                    - codBarras
+                - $ref: '#/components/schemas/StockItemMeta'
+      responses:
+        '201':
+          description: Sucesso ao dar entrada no estoque.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      codBarras:
+                        type: string
+                        description: Código de barras do item.
+                  - $ref: '#/components/schemas/StockItemMeta'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    delete:
+      summary: Dar baixa (saída) nos itens do estoque de um CD.
+      operationId: saida-estoque-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo estoque deseja-se atualizar.
+          schema:
+            type: integer
+        - name: codBarras
+          in: query
+          required: true
+          description: Código de barras do item a dar saída do estoque.
+          schema:
+            type: string
+        - name: qtd
+          in: query
+          required: true
+          description: Quantidade de itens a dar saída do estoque.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Sucesso ao dar baixa no estoque.
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/stock/history/{codCd}:
+    get:
+      summary: Recuperar todas as doações feitas a um CD, estejam os itens ainda presentes no estoque ou não.
+      operationId: get-estoque-historico-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo histórico de estoque deseja-se recuperar.
+          schema:
+            type: integer
+        - name: since
+          in: query
+          required: false
+          description: Data desde que deseja-se recuperar as doações, encodada no formato ISO 8601. Se não especificado, serão retornadas as doações de todos os tempos.
+          schema:
+            type: string
+            format: date
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar estoque histórico.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        item:
+                          $ref: '#/components/schemas/StockItem'
+                    - $ref: '#/components/schemas/StockItemMeta'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
 components:
   schemas:
     GenericErrorMessage:
@@ -561,6 +735,8 @@ components:
         code:
           type: string
           description: Identificador único gerado automaticamente para o objeto.
+      required:
+        - code
     Role:
       type: string
       enum: [voluntario, adminCd, adminAbrigo, superadmin]
@@ -615,6 +791,56 @@ components:
         - email
         - phone
         - codCadastro
+    StockItem:
+      type: object
+      properties:
+        nomeItem:
+          type: string
+          description: Nome do item.
+        unidadeDeMedida:
+          type: string
+          description: Unidade de medida do item.
+        multiplicador:
+          type: string
+          description: Qual o tamanho do item relativo à unidade de medida informada.
+        tags:
+          type: array
+          items:
+              type: string
+          description: Tags associadas ao item, como "higiene", "alimentação" etc.
+      required:
+        - nomeItem
+        - unidadeDeMedida
+        - multiplicador
+    StockItemMeta:
+      type: object
+      properties:
+        codDoador:
+          type: string
+          description: CPF/CNPJ do doador dos itens.
+        codCd:
+          type: integer
+          description: Código do CD que está recebendo os itens.
+        qtdDoada:
+          type: integer
+          description: Quantidade do item que foi doada.
+        qtdAtual:
+          type: integer
+          description: Quanto do que foi doado ainda está disponível no estoque.
+        dataDoacao:
+          type: string
+          format: date
+          description: Data em que os itens entraram no estoque.
+        dataValidade:
+          type: string
+          format: date
+          description: Data de validade do item.
+      required:
+        - codDoador
+        - codCd
+        - qtdDoada
+        - qtdAtual
+        - dataDoacao
   responses:
     HTTP500Error:
       description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
@@ -645,7 +871,7 @@ components:
           schema:
             $ref: '#/components/schemas/GenericErrorMessage'
     HTTP404Error:
-      description: Recurso não encontrado.
+      description: Recurso não encontrado ou não disponível.
       content:
         application/json:
           schema:
