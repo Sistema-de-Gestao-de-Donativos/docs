@@ -392,42 +392,42 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  /users/{birthdate}:
-    get:
-      summary: Recuperar usuários pela data de nascimento.
-      operationId: get-usuario-birthdate
-      tags:
-        - MS de Usuários
-      parameters:
-        - name: birthdate
-          in: path
-          required: true
-          description: A data de nascimento do usuário, encodada no formato ISO 8601.
-          schema:
-            type: string
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Sucesso ao recuperar usuários.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  allOf:
-                    - $ref: '#/components/schemas/User'
-                    - $ref: '#/components/schemas/Id'
-        '401':
-          $ref: '#/components/responses/HTTP401Error'
-        '404':
-          $ref: '#/components/responses/HTTP404Error'
-        '400':
-          $ref: '#/components/responses/HTTP400Error'
-        '403':
-          $ref: '#/components/responses/HTTP403Error'
-        '500':
-          $ref: '#/components/responses/HTTP500Error'
+  #/users/{birthdate}:
+  #  get:
+  #    summary: Recuperar usuários pela data de nascimento.
+  #    operationId: get-usuario-birthdate
+  #    tags:
+  #      - MS de Usuários
+  #    parameters:
+  #      - name: birthdate
+  #        in: path
+  #        required: true
+  #        description: A data de nascimento do usuário, encodada no formato ISO 8601.
+  #        schema:
+  #          type: string
+  #    security:
+  #      - BearerAuth: []
+  #    responses:
+  #      '200':
+  #        description: Sucesso ao recuperar usuários.
+  #        content:
+  #          application/json:
+  #           schema:
+  #              type: array
+  #              items:
+  #                allOf:
+  #                  - $ref: '#/components/schemas/User'
+  #                  - $ref: '#/components/schemas/Id'
+  #      '401':
+  #        $ref: '#/components/responses/HTTP401Error'
+  #      '404':
+  #        $ref: '#/components/responses/HTTP404Error'
+  #      '400':
+  #        $ref: '#/components/responses/HTTP400Error'
+  #      '403':
+  #        $ref: '#/components/responses/HTTP403Error'
+  #      '500':
+  #        $ref: '#/components/responses/HTTP500Error'
 components:
   schemas:
     GenericErrorMessage:
@@ -445,8 +445,7 @@ components:
           type: string
           description: Nome do CD.
         address:
-          type: string
-          description: Endereço do CD.
+          $ref: '#/components/schemas/Address'
         phone:
           type: string
           description: Telefone de contato.
@@ -466,8 +465,7 @@ components:
           type: string
           description: Nome do abrigo.
         address:
-          type: string
-          description: Endereço do abrigo.
+          $ref: '#/components/schemas/Address'
         phone:
           type: string
           description: Telefone de contato.
@@ -486,8 +484,7 @@ components:
           type: string
           description: Nome do usuário.
         address:
-          type: string
-          description: Endereço do usuário.
+          $ref: '#/components/schemas/Address'
         email:
           type: string
           description: Email do usuário. Também é usado como identificador único no sistema.
@@ -524,6 +521,34 @@ components:
     Role:
       type: string
       enum: [voluntario, adminCd, adminAbrigo, superadmin]
+    Address:
+      type: object
+      properties:
+        country:
+          type: string
+          description: País do endereço.
+        state:
+          type: string
+          description: Nome do estado do endereço por extenso.
+        city:
+          type: string
+          description: Cidade do endereço.
+        neighborhood:
+          type: string
+          description: Bairro do endereço.
+        street:
+          type: string
+          description: Logradouro do endereço.
+        number:
+          type: integer
+          description: Número do endereço.
+      required:
+        - country
+        - state
+        - city
+        - neighborhood
+        - street
+        - number
   responses:
     HTTP500Error:
       description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
