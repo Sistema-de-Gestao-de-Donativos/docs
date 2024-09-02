@@ -5,7 +5,7 @@ info:
     Esta é a documentação das APIs de back-end do Sistema de Gestão de Donativos, cujo objetivo é auxiliar na gerência de donativos em situações de desastres como enchentes, furacões, tornados etc. Esta ideia foi baseada na enchente de 2024 que aconteceu em Porto Alegre, que foi a maior da história da capital gaúcha.
   version: 1.0.0
 externalDocs:
-  description: Repositório do GiHub
+  description: Repositório do GitHub
   url: https://github.com/rsuffert/sistema-gestao-donativos
 tags:
   - name: MS de Autenticação (Auth)
@@ -144,6 +144,11 @@ paths:
                 email:
                   type: string
                   description: Email para contato.
+              required:
+                - name
+                - address
+                - phone
+                - email
       security:
         - BearerAuth: []
       responses:
@@ -163,7 +168,7 @@ paths:
           $ref: '#/components/responses/HTTP500Error'
   /abrigos:
     get:
-      summary: Recuperar um abrigo.
+      summary: Recuperar informações sobre um abrigo.
       operationId: get-abrigo
       tags:
         - MS de Abrigos
@@ -222,6 +227,11 @@ paths:
                 email:
                   type: string
                   description: Email para contato.
+              required:
+                - name
+                - address
+                - phone
+                - email
       security:
         - BearerAuth: []
       responses:
@@ -310,7 +320,7 @@ paths:
         - name: email
           in: path
           required: true
-          description: Email do usuário a ser buscado.
+          description: Email do usuário a ser deletado.
           schema:
             type: string
       responses:
@@ -393,6 +403,13 @@ components:
         codEntidade:
           type: integer
           description: Código da entidade (CD ou Abrigo) à qual este usuário está relacionado.
+      required:
+        - name
+        - address
+        - email
+        - phone
+        - role
+        - codEntidade
   responses:
     HTTP500Error:
       description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
