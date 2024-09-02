@@ -23,7 +23,7 @@ tags:
   - name: MS de Estoque
     description: Gestão dos estoques dos centros de distrbuição (CDs) do
 paths:
-  /auth/google:
+  /v1/auth/google:
     get:
       tags:
         - MS de Autenticação (Auth)
@@ -83,7 +83,7 @@ paths:
           $ref: '#/components/responses/HTTP400Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  /cds:
+  /v1/cds:
     get:
       summary: Recuperar informações sobre um CD.
       operationId: get-cd
@@ -153,7 +153,7 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  /abrigos:
+  /v1/abrigos:
     get:
       summary: Recuperar informações sobre um abrigo.
       operationId: get-abrigo
@@ -223,7 +223,7 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  /users:
+  /v1/users:
     post:
       operationId: create-usuario
       tags:
@@ -350,7 +350,7 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  /users/{role}/{codEntidade}:
+  /v1/users/{role}/{codEntidade}:
     get:
       summary: Recuperar usuários de um certo papel de uma entidade (Abrigo ou CD).
       operationId: get-usuario-papel-entidade
@@ -392,7 +392,7 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  #/users/{birthdate}:
+  #/v1/users/{birthdate}:
   #  get:
   #    summary: Recuperar usuários pela data de nascimento.
   #    operationId: get-usuario-birthdate
@@ -487,7 +487,7 @@ components:
           $ref: '#/components/schemas/Address'
         email:
           type: string
-          description: Email do usuário. Também é usado como identificador único no sistema.
+          description: Email do usuário.
         phone:
           type: string
           description: Telefone do usuário.
@@ -495,7 +495,7 @@ components:
           $ref: '#/components/schemas/Role'
         codEntidade:
           type: integer
-          description: Código da entidade (CD ou Abrigo) à qual este usuário está relacionado.
+          description: Código da entidade (CD ou Abrigo) a qual este usuário está relacionado.
         cpf:
           type: string
           description: Cadastro de Pessoa Física do usuário.
