@@ -1,0 +1,435 @@
+openapi: 3.0.3
+info:
+  title: APIs do Sistema de Gestão de Donativos - OpenAPI 3.0
+  description: |-
+    Esta é a documentação das APIs de back-end do Sistema de Gestão de Donativos, cujo objetivo é auxiliar na gerência de donativos em situações de desastres como enchentes, furacões, tornados etc. Esta ideia foi baseada na enchente de 2024 que aconteceu em Porto Alegre, que foi a maior da história da capital gaúcha.
+  version: 1.0.0
+externalDocs:
+  description: Repositório do GiHub
+  url: https://github.com/rsuffert/sistema-gestao-donativos
+tags:
+  - name: MS de Autenticação (Auth)
+    description: Autenticação dos clientes no back-end do sistema.
+  - name: MS de Usuários
+    description: Armazenamento e gerência das informações sobre os usuários do sistema.
+  - name: MS de Abrigos
+    description: Armazenamento e gerência das informações sobre os abrigos cadastrados no sistema.
+  - name: MS de CDs
+    description: Armazenamento e gerência das informações sobre os centros de distribuição (CDs) cadastrados no sistema.
+  - name: MS de Relatórios
+    description: Geração de relatórios para administradores.
+  - name: MS de Pedidos
+    description: Armazenamento e gerência dos pedidos feitos dos abrigos aos centros de distribuição (CDs)
+  - name: MS de Estoque
+    description: Gestão dos estoques dos centros de distrbuição (CDs) do
+paths:
+  /auth/google:
+    get:
+      tags:
+        - MS de Autenticação (Auth)
+      summary: Redireciona para a página do Google para autenticação SSO.
+      operationId: google-sso-redirect
+      responses:
+        '302':
+          description: Redirecionamento para a página de autenticação SSO do Google.
+          headers:
+            Location:
+              description: URI para onde o cliente deve se direcionar para a autenticação SSO.
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      tags:
+        - MS de Autenticação (Auth)
+      summary: Troca o código de autorização do Google por um token JWT a ser usado no sistema.
+      operationId: exchange-jwt
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: O código recebido da API de autenticação SSO do Google.
+                redirect_uri:
+                  type: string
+                  description: A URI para onde o Google redirecionou o cliente após a autenticação.
+              required:
+                - code
+                - redirect_uri
+      responses:
+        '200':
+          description: Token JWT gerado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                    description: Token JWT para autenticação subsequente nos demais microserviços.
+        '403':
+          description: Falha na verificação do código de autenticação do Google.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorMessage'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /cds:
+    get:
+      summary: Recuperar informações sobre um CD.
+      operationId: get-cd
+      tags:
+        - MS de CDs
+      parameters:
+        - name: codCd
+          in: query
+          required: false
+          description: O código do CD a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: nomeCd
+          in: query
+          required: false
+          description: O nome do CD a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar CD.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CD'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      operationId: create-cd
+      summary: Criar um novo CD no sistema.
+      tags:
+      - MS de CDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nome do CD.
+                address:
+                  type: string
+                  description: Endereço do CD.
+                phone:
+                  type: string
+                  description: Telefone para contato.
+                email:
+                  type: string
+                  description: Email para contato.
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Sucesso ao criar CD.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CD'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /abrigos:
+    get:
+      summary: Recuperar um abrigo.
+      operationId: get-abrigo
+      tags:
+        - MS de Abrigos
+      parameters:
+        - name: codAbrigo
+          in: query
+          required: false
+          description: O código do abrigo a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: nomeAbrigo
+          in: query
+          required: false
+          description: O nome do abrigo a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar abrigo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Abrigo'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      summary: Criar um novo abrigo no sistema.
+      operationId: create-abrigo
+      tags:
+      - MS de Abrigos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nome do abrigo.
+                address:
+                  type: string
+                  description: Endereço do abrigo.
+                phone:
+                  type: string
+                  description: Telefone para contato.
+                email:
+                  type: string
+                  description: Email para contato.
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Sucesso ao criar abrigo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Abrigo'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /users:
+    post:
+      operationId: create-usuario
+      tags:
+        - MS de Usuários
+      summary: Criar um novo usuário no sistema.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Sucesso ao criar usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /users/{email}:
+    get:
+      operationId: get-usuario-by-email
+      tags:
+        - MS de Usuários
+      summary: Recuperar informações de um usuário do sistema.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: email
+          in: path
+          required: true
+          description: Email do usuário a ser buscado.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sucesso ao recuperar usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    delete:
+      operationId: delete-usuario-by-email
+      tags:
+        - MS de Usuários
+      summary: Deletar um usuário do sistema.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: email
+          in: path
+          required: true
+          description: Email do usuário a ser buscado.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Sucesso ao deletar usuário.
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+components:
+  schemas:
+    GenericErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Informações sobre o erro.
+      required:
+        - message
+    CD:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Código do CD.
+        name:
+          type: string
+          description: Nome do CD.
+        address:
+          type: string
+          description: Endereço do CD.
+        phone:
+          type: string
+          description: Telefone de contato.
+        email:
+          type: string
+          description: Email de contato.
+    Abrigo:
+      type: integer
+      properties:
+        code:
+          type: string
+          description: Código do abrigo.
+        name:
+          type: string
+          description: Nome do abrigo.
+        address:
+          type: string
+          description: Endereço do abrigo.
+        phone:
+          type: string
+          description: Telefone de contato.
+        email:
+          type: string
+          description: Email de contato.
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome do usuário.
+        address:
+          type: string
+          description: Endereço do usuário.
+        email:
+          type: string
+          description: Email do usuário. Também é usado como identificador único no sistema.
+        phone:
+          type: string
+          description: Telefone do usuário.
+        role:
+          type: string
+          enum: [voluntario, adminCd, adminAbrigo, superadmin]
+        codEntidade:
+          type: integer
+          description: Código da entidade (CD ou Abrigo) à qual este usuário está relacionado.
+  responses:
+    HTTP500Error:
+      description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Alguma informação sobre o erro ou instrução de como proceder.
+    HTTP400Error:
+      description: Algo de errado no formato da requisição.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+    HTTP401Error:
+      description: Token de autenticação não encontrado ou o usuário não possui a permissão para executar tal ação.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+    HTTP403Error:
+      description: Não foi possível validar o token de autenticação. Reautentique-se e tente novamente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+    HTTP404Error:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
