@@ -16,6 +16,8 @@ tags:
     description: Armazenamento e gerência das informações sobre os abrigos cadastrados no sistema.
   - name: MS de CDs
     description: Armazenamento e gerência das informações sobre os centros de distribuição (CDs) cadastrados no sistema.
+  - name: MS de Doadores
+    description: Armazenamento e gerência das informações sobre os doadores cadastrados no sistema.
   - name: MS de Relatórios
     description: Geração de relatórios para administradores.
   - name: MS de Pedidos
@@ -392,42 +394,88 @@ paths:
           $ref: '#/components/responses/HTTP403Error'
         '500':
           $ref: '#/components/responses/HTTP500Error'
-  #/v1/users/{birthdate}:
-  #  get:
-  #    summary: Recuperar usuários pela data de nascimento.
-  #    operationId: get-usuario-birthdate
-  #    tags:
-  #      - MS de Usuários
-  #    parameters:
-  #      - name: birthdate
-  #        in: path
-  #        required: true
-  #        description: A data de nascimento do usuário, encodada no formato ISO 8601.
-  #        schema:
-  #          type: string
-  #    security:
-  #      - BearerAuth: []
-  #    responses:
-  #      '200':
-  #        description: Sucesso ao recuperar usuários.
-  #        content:
-  #          application/json:
-  #           schema:
-  #              type: array
-  #              items:
-  #                allOf:
-  #                  - $ref: '#/components/schemas/User'
-  #                  - $ref: '#/components/schemas/Id'
-  #      '401':
-  #        $ref: '#/components/responses/HTTP401Error'
-  #      '404':
-  #        $ref: '#/components/responses/HTTP404Error'
-  #      '400':
-  #        $ref: '#/components/responses/HTTP400Error'
-  #      '403':
-  #        $ref: '#/components/responses/HTTP403Error'
-  #      '500':
-  #        $ref: '#/components/responses/HTTP500Error'
+  /v1/donors:
+    post:
+      operationId: create-doador
+      tags:
+        - MS de Doadores
+      summary: Criar um novo doador no sistema.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Donor'
+      responses:
+        '201':
+          description: Sucesso ao criar doador.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Donor'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    get:
+      summary: Recuperar informações sobre um doador do sistema.
+      operationId: get-doador
+      tags:
+        - MS de Doadores
+      parameters:
+        - name: codDoador
+          in: query
+          required: false
+          description: O código do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: email
+          in: query
+          required: false
+          description: Email do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: phone
+          in: query
+          required: false
+          description: Telefone do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: codCadastro
+          in: query
+          required: false
+          description: CPF ou CNPJ do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar doador.
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/Donor'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
 components:
   schemas:
     GenericErrorMessage:
@@ -499,10 +547,6 @@ components:
         cpf:
           type: string
           description: Cadastro de Pessoa Física do usuário.
-        birthdate:
-          type: string
-          format: date
-          description: Data de nascimento do usuário.
       required:
         - name
         - address
@@ -511,7 +555,6 @@ components:
         - role
         - codEntidade
         - cpf
-        - birthdate
     Id:
       type: object
       properties:
@@ -549,6 +592,29 @@ components:
         - neighborhood
         - street
         - number
+    Donor:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome completo do doador (para pessoas físicas) ou nome fantasia (para pessoas jurídicas).
+        address:
+          $ref: '#/components/schemas/Address'
+        email:
+          type: string
+          description: Email do doador.
+        phone:
+          type: string
+          description: Telefone do doador.
+        codCadastro:
+          type: string
+          description: CPF (para pessoas físicas) ou CNPJ (para pessoas jurídicas).
+      required:
+        - name
+        - address
+        - email
+        - phone
+        - codCadastro
   responses:
     HTTP500Error:
       description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
