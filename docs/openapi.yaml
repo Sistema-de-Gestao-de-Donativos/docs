@@ -1,0 +1,915 @@
+openapi: 3.0.3
+info:
+  title: APIs do Sistema de Gestão de Donativos - OpenAPI 3.0
+  description: |-
+    Esta é a documentação das APIs de back-end do Sistema de Gestão de Donativos, cujo objetivo é auxiliar na gerência de donativos em situações de desastres como enchentes, furacões, tornados etc. Esta ideia foi baseada na enchente de 2024 que aconteceu em Porto Alegre, que foi a maior da história da capital gaúcha.
+  version: 1.0.0
+externalDocs:
+  description: Repositório do GitHub
+  url: https://github.com/rsuffert/sistema-gestao-donativos
+tags:
+  - name: MS de Autenticação (Auth)
+    description: Autenticação dos clientes no back-end do sistema.
+  - name: MS de Usuários
+    description: Armazenamento e gerência das informações sobre os usuários do sistema.
+  - name: MS de Abrigos
+    description: Armazenamento e gerência das informações sobre os abrigos cadastrados no sistema.
+  - name: MS de CDs
+    description: Armazenamento e gerência das informações sobre os centros de distribuição (CDs) cadastrados no sistema.
+  - name: MS de Doadores
+    description: Armazenamento e gerência das informações sobre os doadores cadastrados no sistema.
+  - name: MS de Estoque
+    description: Gestão dos estoques dos centros de distrbuição (CDs).
+  - name: MS de Pedidos
+    description: Armazenamento e gerência dos pedidos feitos dos abrigos aos centros de distribuição (CDs)
+  - name: MS de Relatórios
+    description: Geração de relatórios para administradores.
+paths:
+  /v1/auth/google:
+    get:
+      tags:
+        - MS de Autenticação (Auth)
+      summary: Redireciona para a página do Google para autenticação SSO.
+      operationId: google-sso-redirect
+      responses:
+        '302':
+          description: Redirecionamento para a página de autenticação SSO do Google.
+          headers:
+            Location:
+              description: URI para onde o cliente deve se direcionar para a autenticação SSO.
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      tags:
+        - MS de Autenticação (Auth)
+      summary: Troca o código de autorização do Google por um token JWT a ser usado no sistema.
+      operationId: exchange-jwt
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: O código recebido da API de autenticação SSO do Google.
+                redirect_uri:
+                  type: string
+                  description: A URI para onde o Google redirecionou o cliente após a autenticação.
+              required:
+                - code
+                - redirect_uri
+      responses:
+        '200':
+          description: Token JWT gerado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                    description: Token JWT para autenticação subsequente nos demais microserviços.
+        '403':
+          description: Falha na verificação do código de autenticação do Google.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorMessage'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/cds:
+    get:
+      summary: Recuperar informações sobre um CD.
+      operationId: get-cd
+      tags:
+        - MS de CDs
+      parameters:
+        - name: codCd
+          in: query
+          required: false
+          description: O código do CD a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: nomeCd
+          in: query
+          required: false
+          description: O nome do CD a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar CD.
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/CD'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      operationId: create-cd
+      summary: Criar um novo CD no sistema.
+      tags:
+      - MS de CDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CD'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Sucesso ao criar CD.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CD'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/abrigos:
+    get:
+      summary: Recuperar informações sobre um abrigo.
+      operationId: get-abrigo
+      tags:
+        - MS de Abrigos
+      parameters:
+        - name: codAbrigo
+          in: query
+          required: false
+          description: O código do abrigo a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: nomeAbrigo
+          in: query
+          required: false
+          description: O nome do abrigo a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar abrigo.
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/Abrigo'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      summary: Criar um novo abrigo no sistema.
+      operationId: create-abrigo
+      tags:
+      - MS de Abrigos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Abrigo'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Sucesso ao criar abrigo.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Abrigo'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/users:
+    post:
+      operationId: create-usuario
+      tags:
+        - MS de Usuários
+      summary: Criar um novo usuário no sistema.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Sucesso ao criar usuário.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    get:
+      summary: Recuperar informações sobre um usuário do sistema.
+      operationId: get-usuario
+      tags:
+        - MS de Usuários
+      parameters:
+        - name: codUsuario
+          in: query
+          required: false
+          description: O código do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: email
+          in: query
+          required: false
+          description: Email do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: phone
+          in: query
+          required: false
+          description: Telefone do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: cpf
+          in: query
+          required: false
+          description: Cadastro de Pessoa Física do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar usuário.
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    delete:
+      summary: Remover um usuário do sistema.
+      operationId: delete-usuario
+      tags:
+        - MS de Usuários
+      parameters:
+        - name: codUsuario
+          in: query
+          required: false
+          description: O código do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: email
+          in: query
+          required: false
+          description: Email do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: phone
+          in: query
+          required: false
+          description: Telefone do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: cpf
+          in: query
+          required: false
+          description: Cadastro de Pessoa Física do usuário a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Sucesso ao deletar usuário.
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/users/{role}/{codEntidade}:
+    get:
+      summary: Recuperar usuários de um certo papel de uma entidade (Abrigo ou CD).
+      operationId: get-usuario-papel-entidade
+      tags:
+        - MS de Usuários
+      parameters:
+        - name: role
+          in: path
+          required: true
+          description: O papel do usuário a ser buscado.
+          schema:
+            $ref: '#/components/schemas/Role'
+        - name: codEntidade
+          in: path
+          required: true
+          description: O identificador único da entidade (Abrigo ou CD) ao qual o usuário pertence.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar usuários.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/User'
+                    - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/donors:
+    post:
+      operationId: create-doador
+      tags:
+        - MS de Doadores
+      summary: Criar um novo doador no sistema.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Donor'
+      responses:
+        '201':
+          description: Sucesso ao criar doador.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Donor'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    get:
+      summary: Recuperar informações sobre um doador do sistema.
+      operationId: get-doador
+      tags:
+        - MS de Doadores
+      parameters:
+        - name: codDoador
+          in: query
+          required: false
+          description: O código do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: integer
+        - name: email
+          in: query
+          required: false
+          description: Email do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: phone
+          in: query
+          required: false
+          description: Telefone do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+        - name: codCadastro
+          in: query
+          required: false
+          description: CPF ou CNPJ do doador a ser buscado. Se não especificado, não afetará a busca.
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar doador.
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/Donor'
+                  - $ref: '#/components/schemas/Id'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/stock/{codCd}:
+    get:
+      summary: Recuperar o estoque atual de um CD.
+      operationId: get-estoque-atual-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo estoque deseja-se recuperar.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar estoque.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        item:
+                          $ref: '#/components/schemas/StockItem'
+                    - $ref: '#/components/schemas/StockItemMeta'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    post:
+      summary: Dar a entrada de itens no estoque de um CD.
+      operationId: entrada-estoque-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo estoque deseja-se atualizar.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    codBarras:
+                      type: string
+                      description: Código de barras do item.
+                  required:
+                    - codBarras
+                - $ref: '#/components/schemas/StockItemMeta'
+      responses:
+        '201':
+          description: Sucesso ao dar entrada no estoque.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      codBarras:
+                        type: string
+                        description: Código de barras do item.
+                  - $ref: '#/components/schemas/StockItemMeta'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+    delete:
+      summary: Dar baixa (saída) nos itens do estoque de um CD.
+      operationId: saida-estoque-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo estoque deseja-se atualizar.
+          schema:
+            type: integer
+        - name: codBarras
+          in: query
+          required: true
+          description: Código de barras do item a dar saída do estoque.
+          schema:
+            type: string
+        - name: qtd
+          in: query
+          required: true
+          description: Quantidade de itens a dar saída do estoque.
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Sucesso ao dar baixa no estoque.
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+  /v1/stock/history/{codCd}:
+    get:
+      summary: Recuperar todas as doações feitas a um CD, estejam os itens ainda presentes no estoque ou não.
+      operationId: get-estoque-historico-cd
+      tags:
+        - MS de Estoque
+      parameters:
+        - name: codCd
+          in: path
+          required: true
+          description: Código do CD cujo histórico de estoque deseja-se recuperar.
+          schema:
+            type: integer
+        - name: since
+          in: query
+          required: false
+          description: Data desde que deseja-se recuperar as doações, encodada no formato ISO 8601. Se não especificado, serão retornadas as doações de todos os tempos.
+          schema:
+            type: string
+            format: date
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sucesso ao recuperar estoque histórico.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        item:
+                          $ref: '#/components/schemas/StockItem'
+                    - $ref: '#/components/schemas/StockItemMeta'
+        '401':
+          $ref: '#/components/responses/HTTP401Error'
+        '404':
+          $ref: '#/components/responses/HTTP404Error'
+        '400':
+          $ref: '#/components/responses/HTTP400Error'
+        '403':
+          $ref: '#/components/responses/HTTP403Error'
+        '500':
+          $ref: '#/components/responses/HTTP500Error'
+components:
+  schemas:
+    GenericErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Informações sobre o erro.
+          example: Mensagem com informações sobre o erro e/ou instruções de como prosseguir.
+      required:
+        - message
+    CD:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome do CD.
+          example: Centro de Distribuição do Sul
+        address:
+          $ref: '#/components/schemas/Address'
+        phone:
+          type: string
+          description: Telefone de contato.
+          example: 555134027814
+        email:
+          type: string
+          description: Email de contato.
+          example: cddosul@example.com.br
+      required:
+        - name
+        - address
+        - phone
+        - email
+        - joinedAt
+    Abrigo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome do abrigo.
+          example: Abrigo do Norte
+        address:
+          $ref: '#/components/schemas/Address'
+        phone:
+          type: string
+          description: Telefone de contato.
+          example: 555134027814
+        email:
+          type: string
+          description: Email de contato.
+          example: abrigodonorte@example.com.br
+      required:
+        - name
+        - address
+        - phone
+        - email
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome do usuário.
+          example: Geraldo de Fátima
+        address:
+          $ref: '#/components/schemas/Address'
+        email:
+          type: string
+          description: Email do usuário.
+          example: geraldo@example.com.br
+        phone:
+          type: string
+          description: Telefone do usuário.
+          example: 555134027814
+        role:
+          $ref: '#/components/schemas/Role'
+        codEntidade:
+          type: integer
+          description: Código da entidade (CD ou Abrigo) a qual este usuário está relacionado.
+          example: 12
+        cpf:
+          type: string
+          description: Cadastro de Pessoa Física do usuário.
+          example: 09023214567
+      required:
+        - name
+        - address
+        - email
+        - phone
+        - role
+        - codEntidade
+        - cpf
+    Id:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Identificador único gerado automaticamente para o objeto.
+          example: 1
+      required:
+        - code
+    Role:
+      type: string
+      enum: [voluntario, adminCd, adminAbrigo, superadmin]
+    Address:
+      type: object
+      properties:
+        country:
+          type: string
+          description: País do endereço.
+          example: Brasil
+        state:
+          type: string
+          description: Nome do estado do endereço por extenso.
+          example: Rio Grande do Sul
+        city:
+          type: string
+          description: Cidade do endereço.
+          example: Porto Alegre
+        neighborhood:
+          type: string
+          description: Bairro do endereço.
+          example: Partenon
+        street:
+          type: string
+          description: Logradouro do endereço.
+          example: Av. Ipiranga
+        number:
+          type: integer
+          description: Número do endereço.
+          example: 6681
+      required:
+        - country
+        - state
+        - city
+        - neighborhood
+        - street
+        - number
+    Donor:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome completo do doador (para pessoas físicas) ou nome fantasia (para pessoas jurídicas).
+          example: Felipe da Costa
+        address:
+          $ref: '#/components/schemas/Address'
+        email:
+          type: string
+          description: Email do doador.
+          example: felipe@example.com.br
+        phone:
+          type: string
+          description: Telefone do doador.
+          example: 555134027814
+        codCadastro:
+          type: string
+          description: CPF (para pessoas físicas) ou CNPJ (para pessoas jurídicas).
+          example: 88432367180
+      required:
+        - name
+        - address
+        - email
+        - phone
+        - codCadastro
+    StockItem:
+      type: object
+      properties:
+        nomeItem:
+          type: string
+          description: Nome do item.
+          example: Arroz branco
+        unidadeDeMedida:
+          type: string
+          description: Unidade de medida do item.
+          example: kg
+        multiplicador:
+          type: string
+          description: Qual o tamanho do item relativo à unidade de medida informada.
+          example: 1
+        tags:
+          type: array
+          items:
+              type: string
+          description: Tags associadas ao item, como "higiene", "alimentação" etc.
+          example: ['alimentos', 'nao pereciveis']
+      required:
+        - nomeItem
+        - unidadeDeMedida
+        - multiplicador
+    StockItemMeta:
+      type: object
+      properties:
+        codDoador:
+          type: string
+          description: CPF/CNPJ do doador dos itens.
+          example: 10
+        codCd:
+          type: integer
+          description: Código do CD que está recebendo os itens.
+          example: 2
+        qtdDoada:
+          type: integer
+          description: Quantidade do item que foi doada.
+          example: 5
+        qtdAtual:
+          type: integer
+          description: Quanto do que foi doado ainda está disponível no estoque.
+          example: 3
+        dataDoacao:
+          type: string
+          format: date
+          description: Data em que os itens entraram no estoque.
+        dataValidade:
+          type: string
+          format: date
+          description: Data de validade do item.
+      required:
+        - codDoador
+        - codCd
+        - qtdDoada
+        - qtdAtual
+        - dataDoacao
+  responses:
+    HTTP500Error:
+      description: Um erro inesperado aconteceu no servidor. Por favor, tente novamente mais tarde.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Alguma informação sobre o erro ou instrução de como proceder.
+                example: Internal Server Error. Try again later.
+    HTTP400Error:
+      description: Algo de errado no formato da requisição.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+    HTTP401Error:
+      description: Token de autenticação não encontrado ou o usuário não possui a permissão para executar tal ação.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+    HTTP403Error:
+      description: Não foi possível validar o token de autenticação. Reautentique-se e tente novamente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+    HTTP404Error:
+      description: Recurso não encontrado ou não disponível.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorMessage'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
