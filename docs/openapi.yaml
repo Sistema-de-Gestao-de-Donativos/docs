@@ -87,18 +87,20 @@ paths:
           $ref: '#/components/responses/HTTP500Error'
   /v1/cds:
     get:
-      summary: Recuperar informações sobre um CD.
+      summary: Recuperar informações sobre um CD ou a lista de todos os CDs.
+      description: Recupera um CD específico pelo nome ou código ou a lista completa de CDs.
       operationId: get-cd
       tags:
         - MS de CDs
       parameters:
-        - name: codCd
+        - name: codCD
           in: query
           required: false
           description: O código do CD a ser buscado. Se não especificado, não afetará a busca.
           schema:
             type: integer
-        - name: nomeCd
+            format: int64
+        - name: nameCd
           in: query
           required: false
           description: O nome do CD a ser buscado. Se não especificado, não afetará a busca.
@@ -107,54 +109,57 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
-          description: Sucesso ao recuperar CD.
+        "404":
+          description: CD not found
           content:
             application/json:
               schema:
-                type: object
-                allOf:
-                  - $ref: '#/components/schemas/CD'
-                  - $ref: '#/components/schemas/Id'
-        '401':
-          $ref: '#/components/responses/HTTP401Error'
-        '404':
-          $ref: '#/components/responses/HTTP404Error'
-        '400':
-          $ref: '#/components/responses/HTTP400Error'
-        '403':
-          $ref: '#/components/responses/HTTP403Error'
-        '500':
-          $ref: '#/components/responses/HTTP500Error'
+                type: string
+                example:
+                  error: CD not found
+        "400":
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: string
+                example:
+                  error: Invalid parameters
+        "200":
+          description: CD found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CDResponse"
     post:
       operationId: create-cd
       summary: Criar um novo CD no sistema.
+      description: Criar um novo CD no sistema a partir dos dados enviados.
       tags:
       - MS de CDs
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CD'
+              $ref: "#/components/schemas/IncludeCDRequest"
+        required: true
       security:
         - BearerAuth: []
       responses:
-        '201':
-          description: Sucesso ao criar CD.
+        "201":
+          description: CD created
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/CD'
-                  - $ref: '#/components/schemas/Id'
-        '401':
-          $ref: '#/components/responses/HTTP401Error'
-        '400':
-          $ref: '#/components/responses/HTTP400Error'
-        '403':
-          $ref: '#/components/responses/HTTP403Error'
-        '500':
-          $ref: '#/components/responses/HTTP500Error'
+                $ref: "#/components/schemas/CDResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: string
+                example:
+                  error: Invalid request body
   /v1/abrigos:
     get:
       summary: Recuperar informações sobre um abrigo.
@@ -652,6 +657,75 @@ paths:
           $ref: '#/components/responses/HTTP500Error'
 components:
   schemas:
+    IncludeAddressRequest:
+      required:
+      - city
+      - country
+      - neighborhood
+      - number
+      - state
+      - street
+      type: object
+      properties:
+        country:
+          type: string
+        state:
+          type: string
+        city:
+          type: string
+        neighborhood:
+          type: string
+        street:
+          type: string
+        number:
+          type: integer
+          format: int32
+    IncludeCDRequest:
+      required:
+      - address
+      - email
+      - name
+      - phone
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          $ref: "#/components/schemas/IncludeAddressRequest"
+    AddressResponse:
+      type: object
+      properties:
+        country:
+          type: string
+        state:
+          type: string
+        city:
+          type: string
+        neighborhood:
+          type: string
+        street:
+          type: string
+        number:
+          type: integer
+          format: int32
+    CDResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        code:
+          type: integer
+          format: int64
+        address:
+          $ref: "#/components/schemas/AddressResponse"
     GenericErrorMessage:
       type: object
       properties:
