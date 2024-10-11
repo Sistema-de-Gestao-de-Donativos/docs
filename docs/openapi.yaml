@@ -110,21 +110,21 @@ paths:
         - BearerAuth: []
       responses:
         "404":
-          description: CD not found
+          description: CD not found.
           content:
             application/json:
               schema:
                 type: string
                 example:
-                  error: CD not found
+                  error: CD not found.
         "400":
-          description: Invalid parameters
+          description: Invalid parameters.
           content:
             application/json:
               schema:
                 type: string
                 example:
-                  error: Invalid parameters
+                  error: Invalid parameters.
         "200":
           description: CD found
           content:
@@ -147,22 +147,25 @@ paths:
         - BearerAuth: []
       responses:
         "201":
-          description: CD created
+          description: CD created.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CDResponse"
+                $ref: "#/components/schemas/CDCodeResponse"
         "400":
-          description: Invalid request body
+          description: Invalid request body.
           content:
             application/json:
               schema:
                 type: string
                 example:
-                  error: Invalid request body
+                  error:
+                  - Phone is required
+                  - Neighborhood is required
   /v1/abrigos:
     get:
       summary: Recuperar informações sobre um abrigo.
+      description: Retorna as informações sobre um abrigo de acordo com o nome ou código do abrigo, ou a lista completa de abrigos.
       operationId: get-abrigo
       tags:
         - MS de Abrigos
@@ -173,7 +176,8 @@ paths:
           description: O código do abrigo a ser buscado. Se não especificado, não afetará a busca.
           schema:
             type: integer
-        - name: nomeAbrigo
+            format: int64
+        - name: nameAbrigo
           in: query
           required: false
           description: O nome do abrigo a ser buscado. Se não especificado, não afetará a busca.
@@ -182,27 +186,31 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
-          description: Sucesso ao recuperar abrigo.
+        "200":
+          description: Abrigo found.
           content:
             application/json:
               schema:
-                type: object
-                allOf:
-                  - $ref: '#/components/schemas/Abrigo'
-                  - $ref: '#/components/schemas/Id'
-        '401':
-          $ref: '#/components/responses/HTTP401Error'
-        '404':
-          $ref: '#/components/responses/HTTP404Error'
-        '400':
-          $ref: '#/components/responses/HTTP400Error'
-        '403':
-          $ref: '#/components/responses/HTTP403Error'
-        '500':
-          $ref: '#/components/responses/HTTP500Error'
+                $ref: "#/components/schemas/AbrigoResponse"
+        "400":
+          description: Invalid Parameters.
+          content:
+            application/json:
+              schema:
+                type: string
+                example:
+                  error: Invalid parameters.
+        "404":
+          description: Abrigo not found.
+          content:
+            application/json:
+              schema:
+                type: string
+                example:
+                  error: Abrigo not found.
     post:
       summary: Criar um novo abrigo no sistema.
+      description: Cria um novo abrigo usando as informações fornecidas.
       operationId: create-abrigo
       tags:
       - MS de Abrigos
@@ -210,26 +218,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Abrigo'
+              $ref: "#/components/schemas/IncludeAbrigoRequest"
+        required: true
       security:
         - BearerAuth: []
       responses:
-        '201':
-          description: Sucesso ao criar abrigo.
+        "201":
+          description: Abrigo created.
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/Abrigo'
-                  - $ref: '#/components/schemas/Id'
-        '401':
-          $ref: '#/components/responses/HTTP401Error'
-        '400':
-          $ref: '#/components/responses/HTTP400Error'
-        '403':
-          $ref: '#/components/responses/HTTP403Error'
-        '500':
-          $ref: '#/components/responses/HTTP500Error'
+                $ref: "#/components/schemas/AbrigoCodeResponse"
+        "400":
+          description: Invalid Request Body.
+          content:
+            application/json:
+              schema:
+                type: string
+                example:
+                  error:
+                  - Name is required
+                  - Street is required
   /v1/users:
     post:
       operationId: create-usuario
@@ -726,6 +735,49 @@ components:
           format: int64
         address:
           $ref: "#/components/schemas/AddressResponse"
+    IncludeAbrigoRequest:
+      required:
+      - address
+      - email
+      - name
+      - phone
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          $ref: "#/components/schemas/IncludeAddressRequest"
+    AbrigoCodeResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+    AbrigoResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          $ref: "#/components/schemas/AddressResponse"
+    CDCodeResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+    
     GenericErrorMessage:
       type: object
       properties:
@@ -735,51 +787,6 @@ components:
           example: Mensagem com informações sobre o erro e/ou instruções de como prosseguir.
       required:
         - message
-    CD:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Nome do CD.
-          example: Centro de Distribuição do Sul
-        address:
-          $ref: '#/components/schemas/Address'
-        phone:
-          type: string
-          description: Telefone de contato.
-          example: 555134027814
-        email:
-          type: string
-          description: Email de contato.
-          example: cddosul@example.com.br
-      required:
-        - name
-        - address
-        - phone
-        - email
-        - joinedAt
-    Abrigo:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Nome do abrigo.
-          example: Abrigo do Norte
-        address:
-          $ref: '#/components/schemas/Address'
-        phone:
-          type: string
-          description: Telefone de contato.
-          example: 555134027814
-        email:
-          type: string
-          description: Email de contato.
-          example: abrigodonorte@example.com.br
-      required:
-        - name
-        - address
-        - phone
-        - email
     User:
       type: object
       properties:
